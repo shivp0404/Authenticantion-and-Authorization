@@ -7,7 +7,16 @@ return UserModel.create(data);
 
     findbyEmail: (payloademail)=>{
         return UserModel.findOne({email:payloademail}) 
+    },
+    
+    saveRefreshToken: (user,refreshtoken)=>{
+        
+        user.refreshToken = refreshtoken;
+        return user.save()
     }
+
+    
+
 }
 
 module.exports = UserRepositories
