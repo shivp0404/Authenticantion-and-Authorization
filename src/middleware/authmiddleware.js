@@ -1,5 +1,5 @@
 const {VerifyUser} = require("../utils/jwt")
-const jwt = require("jsonwebtoken")
+
 
 const authMiddleware = (req,res,next)=>{
     try{
@@ -14,8 +14,6 @@ const authMiddleware = (req,res,next)=>{
         
 
         const decoded = VerifyUser(token)
-
-       
 
         req.user = {
             id : decoded.id,

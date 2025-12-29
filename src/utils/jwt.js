@@ -11,5 +11,8 @@ const GenerateRefreshToken= (data)=>{
    return jwt.sign(data,process.env.RefreshTokenSecret,{expiresIn:'1hr'})
 }
 
-module.exports = {GenerateAccessToken,GenerateRefreshToken}
+const VerifyUser = (token)=>{
+   return jwt.verify(token,process.env.AccessTokenSecret)
+}
+module.exports = {GenerateAccessToken,GenerateRefreshToken,VerifyUser}
 
