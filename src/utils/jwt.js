@@ -14,5 +14,9 @@ const GenerateRefreshToken= (data)=>{
 const VerifyUser = (token)=>{
    return jwt.verify(token,process.env.AccessTokenSecret)
 }
-module.exports = {GenerateAccessToken,GenerateRefreshToken,VerifyUser}
+
+const decodeRefreshToken = (token)=>{
+   return jwt.verify(token,process.env.RefreshTokenSecret)
+}
+module.exports = {GenerateAccessToken,GenerateRefreshToken,VerifyUser,decodeRefreshToken}
 
