@@ -1,6 +1,6 @@
 const UserRepositories = require("./user.repositories");
 const {hashPassword,hashRefreshToken,comparePassword,compareRefreshToken} = require("../../utils/bcrypt");
-const {GenerateAccessToken, GenerateRefreshToken,} = require("../../utils/jwt");
+const {GenerateAccessToken, GenerateRefreshToken,decodeRefreshToken} = require("../../utils/jwt");
 
 const AuthServices = {
   registration: async (payload) => {
@@ -71,6 +71,26 @@ const AuthServices = {
       refreshToken
     } ;
   },
+
+  logout:async(refreshToken)=>{
+  
+  const decoded = decodeRefreshToken(refreshToken)
+
+
+  const dbtoken = await UserRepositories.findRefreshtoken(decoded.id)
+  if(!dbtoken) throw new Error ("dbtoken not found")
+  
+  
+
+  const isValid = compareRefreshToken(refreshToken,dbtoken.refreshToken)
+  if(!isValid) throw new Error ("invalid Refresh Token")
+    
+  const user = await UserRepositories.removeRefreshToken(decoded.id);
+
+   return {
+    message:"logout"
+   }
+  }
 };
 
 module.exports = AuthServices;
