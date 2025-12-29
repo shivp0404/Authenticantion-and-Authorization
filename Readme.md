@@ -108,6 +108,16 @@ src/
 - Removes refresh token from database
 - Clears refresh token cookie
 
+### 4️⃣ Get User Profile 
+
+- Extracts **Access Token** from request headers
+- Verifies and decodes JWT access token
+- Attaches decoded payload 
+- Controller reads decode payload
+- Service validates business rules
+- Repository fetches user profile by ID
+- Returns authenticated user profile
+
 ---
 
 ## 🧪 Testing Strategy
@@ -159,6 +169,7 @@ REFRESH_TOKEN_SECRET=your_secret
 | POST   | /auth/register | Register user |
 | POST   | /auth/login    | Login user    |
 | POST   | /auth/logout   | Logout user   |
+| GET    | /user/profile  | authenticate user profile |
 
 ---
 
