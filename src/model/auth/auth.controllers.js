@@ -18,7 +18,7 @@ const AuthControllers = {
       
       res.cookie("RefreshToken", user.refreshToken, {
         httpOnly: true,
-        secure: false, // true in production
+        secure: false, 
         sameSite: "lax",
       });
       res
@@ -32,6 +32,23 @@ const AuthControllers = {
       next(err);
     }
   },
+  logout:async(req,res,next)=>{
+    try{
+      const token = req.cookies.RefreshToken;
+      
+      const user = await AuthServices.logout(token);
+    
+      res.clearCookie("RefreshToken",{
+        httpOnly: true,
+        secure: false, 
+        sameSite: "lax",
+      })
+      res.status(200).json({success:true,message:user.message})
+    }
+    catch(err){
+      next(err)
+    }
+  }
 };
 
 module.exports = AuthControllers;
