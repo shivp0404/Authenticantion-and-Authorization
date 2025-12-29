@@ -3,8 +3,8 @@ const AuthServices = require('../auth.services')
 
 jest.mock('../auth.services')
 
-const mockReq = (body = {}) => ({
-  body
+const mockReq = (body = {},cookies = {}) => ({
+  body, cookies
 })
 
 const mockRes = () => {
@@ -12,6 +12,7 @@ const mockRes = () => {
   res.status = jest.fn().mockReturnValue(res)
   res.json = jest.fn()
   res.cookie = jest.fn()
+  res.clearCookie = jest.fn()
   return res
 }
 
@@ -120,6 +121,60 @@ describe("Testing the Login Contoller",()=>{
     expect(res.status).not.toHaveBeenCalled()
     expect(res.json).not.toHaveBeenCalled()
     expect(res.cookie).not.toHaveBeenCalled()
+  })
+})
+
+describe('Testing the Logout Controller', () => {
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('should logout user and clear refresh token cookie', async () => {
+  const req = mockReq({}, { RefreshToken: 'refresh-token' })
+    const res = mockRes()
+    const next = mockNext
+
+    AuthServices.logout.mockResolvedValue({ message: 'logout' })
+
+    await AuthControllers.logout(req, res, next)
+
+    expect(AuthServices.logout).toHaveBeenCalledWith('refresh-token')
+
+    expect(res.clearCookie).toHaveBeenCalledWith(
+      'RefreshToken',
+      expect.objectContaining({
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax'
+      })
+    )
+
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json).toHaveBeenCalledWith({
+      success: true,
+      message: 'logout'
+    })
+
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  test('should call next with error if service throws', async () => {
+    const req = mockReq({}, { RefreshToken: 'refresh-token' })
+    const res = mockRes()
+    const next = mockNext
+
+    const error = new Error('Invalid refresh token')
+    AuthServices.logout.mockRejectedValue(error)
+
+    await AuthControllers.logout(req, res, next)
+
+    expect(AuthServices.logout).toHaveBeenCalledWith('refresh-token')
+    expect(next).toHaveBeenCalledWith(error)
+
+    expect(res.clearCookie).not.toHaveBeenCalled()
+    expect(res.status).not.toHaveBeenCalled()
+    expect(res.json).not.toHaveBeenCalled()
   })
 })
 

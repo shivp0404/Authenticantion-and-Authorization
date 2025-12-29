@@ -13,7 +13,20 @@ return UserModel.create(data);
         
         user.refreshToken = refreshtoken;
         return user.save()
-    }
+    },
+
+    findRefreshtoken:async(id)=>{
+        const user = await UserModel.findById(id).select('refreshToken')
+        return user
+    },
+
+    removeRefreshToken:async(id)=>{
+        const user = await UserModel.findByIdAndUpdate(id)
+        user.refreshToken = "";
+        return user.save();
+        
+
+    },
 
     
 

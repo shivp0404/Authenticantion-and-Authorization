@@ -1,7 +1,7 @@
 const AuthServices = require('../auth.services')
 const UserRepositories = require('../user.repositories')
-const {hashPassword, hashRefreshToken,comparePassword} = require('../../../utils/bcrypt')
-const { GenerateAccessToken,GenerateRefreshToken} = require('../../../utils/jwt')
+const {hashPassword, hashRefreshToken,comparePassword,compareRefreshToken} = require('../../../utils/bcrypt')
+const { GenerateAccessToken,GenerateRefreshToken,decodeRefreshToken} = require('../../../utils/jwt')
 
 jest.mock('../user.repositories')
 jest.mock('../../../utils/bcrypt')
@@ -154,5 +154,65 @@ test('should login user successfully', async () => {
 
 
   
+
+})
+
+describe('Testing the logout process service', () => {
+
+  const refreshToken = 'valid-refresh-token'
+  const decodedPayload = { id: 'user-id' }
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  test('should logout successfully when refresh token is valid', async () => {
+  
+    decodeRefreshToken.mockReturnValue(decodedPayload)
+
+    UserRepositories.findRefreshtoken.mockResolvedValue({
+      refreshToken: 'hashed-refresh-token'
+    })
+
+    compareRefreshToken.mockReturnValue(true)
+
+    UserRepositories.removeRefreshToken.mockResolvedValue(true)
+
+    
+    const result = await AuthServices.logout(refreshToken)
+
+    
+    expect(decodeRefreshToken).toHaveBeenCalledWith(refreshToken)
+    expect(UserRepositories.findRefreshtoken).toHaveBeenCalledWith('user-id')
+    expect(compareRefreshToken).toHaveBeenCalledWith(
+      refreshToken,
+      'hashed-refresh-token'
+    )
+    expect(UserRepositories.removeRefreshToken).toHaveBeenCalledWith('user-id')
+    expect(result).toEqual({ message: 'logout' })
+  })
+
+  test('should throw error if refresh token not found in DB', async () => {
+    decodeRefreshToken.mockReturnValue(decodedPayload)
+    UserRepositories.findRefreshtoken.mockResolvedValue(null)
+
+    await expect(
+      AuthServices.logout(refreshToken)
+    ).rejects.toThrow('dbtoken not found')
+  })
+
+  test('should throw error if refresh token is invalid', async () => {
+    decodeRefreshToken.mockReturnValue(decodedPayload)
+
+    UserRepositories.findRefreshtoken.mockResolvedValue({
+      refreshToken: 'hashed-refresh-token'
+    })
+
+    compareRefreshToken.mockReturnValue(false)
+
+    await expect(
+      AuthServices.logout(refreshToken)
+    ).rejects.toThrow('invalid Refresh Token')
+  })
 
 })

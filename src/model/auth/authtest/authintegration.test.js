@@ -141,3 +141,57 @@ describe("Testing the integrate login flow", () => {
 
 })
 
+describe("Testing the integrate logout flow", () => {
+
+  test('POST /auth/logout should logout user and clear refresh token', async () => {
+   
+    await request(app)
+      .post('/auth/register')
+      .send({
+        name: 'LogoutUser',
+        email: 'logout@test.com',
+        password: '123456'
+      })
+
+    
+    const loginResponse = await request(app)
+      .post('/auth/login')
+      .send({
+        email: 'logout@test.com',
+        password: '123456'
+      })
+
+    
+    const cookies = loginResponse.headers['set-cookie']
+    expect(cookies).toBeDefined()
+
+    
+    const logoutResponse = await request(app)
+      .post('/auth/logout')
+      .set('Cookie', cookies) 
+      .send()
+
+    
+    expect(logoutResponse.status).toBe(200)
+    expect(logoutResponse.body).toEqual({
+      success: true,
+      message: 'logout'
+    })
+
+  
+    expect(logoutResponse.headers['set-cookie'][0])
+      .toContain('RefreshToken=;')
+  })
+
+  test('POST /auth/logout should fail if refresh token missing', async () => {
+    const response = await request(app)
+      .post('/auth/logout')
+      .send()
+
+    expect(response.status).toBe(500) 
+    expect(response.body.message).toBeDefined()
+  })
+
+})
+
+
