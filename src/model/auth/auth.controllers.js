@@ -48,6 +48,20 @@ const AuthControllers = {
     catch(err){
       next(err)
     }
+  },
+  refresh:async(req,res,next)=>{
+   try{
+    const result = await AuthServices.refresh(req.cookies.RefreshToken)
+    res.cookie("RefreshToken",result.RefreshToken,{
+      httpOnly:true,
+      sameSite:"lax",
+      secure:false,
+    })
+    res.status(200).json({success:true,message:"Refresh the token",data:result.AccessToken})
+   }
+   catch(err){
+    next(err)
+   }
   }
 };
 
