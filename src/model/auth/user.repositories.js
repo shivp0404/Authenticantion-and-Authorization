@@ -10,8 +10,12 @@ return UserModel.create(data);
     },
     
     saveRefreshToken: (user,refreshtoken)=>{
-        
         user.refreshToken = refreshtoken;
+        return user.save()
+    },
+    saveResetPasswordToken: (user,data)=>{
+        user.resetPasswordToken = data.hashedResetToken;
+        user.resetPasswordExpiresAt = data.expires
         return user.save()
     },
     findbyid:(id)=>{
@@ -27,8 +31,6 @@ return UserModel.create(data);
         const user = await UserModel.findByIdAndUpdate(id)
         user.refreshToken = "";
         return user.save();
-        
-
     },
 
     
