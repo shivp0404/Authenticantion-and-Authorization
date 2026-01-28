@@ -1,6 +1,15 @@
 const UserRepositories = require("./user.repositories");
-const {hashPassword,hashRefreshToken,comparePassword,compareRefreshToken} = require("../../utils/bcrypt");
-const {GenerateAccessToken, GenerateRefreshToken,decodeRefreshToken} = require("../../utils/jwt");
+const {
+  hashPassword,
+  hashRefreshToken,
+  comparePassword,
+  compareRefreshToken,
+} = require("../../utils/bcrypt");
+const {
+  GenerateAccessToken,
+  GenerateRefreshToken,
+  decodeRefreshToken,
+} = require("../../utils/jwt");
 
 const AuthServices = {
   registration: async (payload) => {
@@ -30,8 +39,7 @@ const AuthServices = {
       throw new Error("Password is required");
     }
     const user = await UserRepositories.findbyEmail(payload.email);
-  
-  
+
     if (!user) {
       throw new Error("Email is wrong");
     }
@@ -41,57 +49,95 @@ const AuthServices = {
     if (!isMatched) {
       throw new Error("Password is wrong");
     }
-  
 
     const accessToken = GenerateAccessToken({
       id: user._id,
       role: user.role,
     });
 
-    if(!accessToken) throw new Error("Access token is not generated")
+    if (!accessToken) throw new Error("Access token is not generated");
 
     const refreshToken = GenerateRefreshToken({
       id: user._id,
       role: user.role,
     });
 
-    if(!refreshToken) throw new Error("Refresh token is not generated")
-    
+    if (!refreshToken) throw new Error("Refresh token is not generated");
 
     const hashedRefreshToken = await hashRefreshToken(refreshToken);
 
-    const usernew = await UserRepositories.saveRefreshToken(user,hashedRefreshToken);
-    
+    const usernew = await UserRepositories.saveRefreshToken(
+      user,
+      hashedRefreshToken,
+    );
 
-    return{
-      data:{
-        name:user.name,
-        email:user.email
+    return {
+      data: {
+        name: user.name,
+        email: user.email,
       },
       accessToken,
-      refreshToken
-    } ;
+      refreshToken,
+    };
   },
 
-  logout:async(refreshToken)=>{
+  logout: async (refreshToken) => {
+    const decoded = decodeRefreshToken(refreshToken);
+
+    const dbtoken = await UserRepositories.findRefreshtoken(decoded.id);
+    if (!dbtoken) throw new Error("dbtoken not found");
+
+    const isValid = compareRefreshToken(refreshToken, dbtoken.refreshToken);
+    if (!isValid) throw new Error("invalid Refresh Token");
+
+    const user = await UserRepositories.removeRefreshToken(decoded.id);
+
+    return {
+      message: "logout",
+    };
+  },
+  refresh: async (refreshToken) => {
+    if (!refreshToken) throw new Error("RefreshToken didn't receive");
+
+    const decode = await decodeRefreshToken(refreshToken);
+    if (!decode) throw new Error("Token didn't decode");
   
-  const decoded = decodeRefreshToken(refreshToken)
+
+     const user = await UserRepositories.findbyid(decode.id)
+    if (!user) throw new Error("User didn't found");
+  
+
+    const isValid = await compareRefreshToken(refreshToken,user.refreshToken);
+    if (!isValid) throw new Error("Token is not Valid");
 
 
-  const dbtoken = await UserRepositories.findRefreshtoken(decoded.id)
-  if(!dbtoken) throw new Error ("dbtoken not found")
-  
-  
+    const NewAccessToken = await GenerateAccessToken({
+      id: decode.id,
+      role: decode.role,
+    });
 
-  const isValid = compareRefreshToken(refreshToken,dbtoken.refreshToken)
-  if(!isValid) throw new Error ("invalid Refresh Token")
+  
+    if (!NewAccessToken) throw new Error("New Access Token is not generated");
+
+    const NewRefreshToken =  await GenerateRefreshToken({
+      id: decode.id,
+      role: decode.role,
+    });
     
-  const user = await UserRepositories.removeRefreshToken(decoded.id);
+    if(!NewRefreshToken) throw new Error("New Refresh Token is not generated");
 
-   return {
-    message:"logout"
-   }
-  }
+    const hashNewRefreshToken = await hashRefreshToken(NewRefreshToken)
+    if(!hashNewRefreshToken) throw new Error("New Refresh Token is not hashed")
+
+   
+    await UserRepositories.saveRefreshToken(user,hashNewRefreshToken)
+    
+     
+    return{
+      AccessToken:NewAccessToken,
+      RefreshToken:hashNewRefreshToken 
+    }
+  },
 };
 
 module.exports = AuthServices;
