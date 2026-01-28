@@ -14,10 +14,10 @@ const authMiddleware = (req,res,next)=>{
         
 
         const decoded = VerifyUser(token)
-
+       
         req.user = {
             id : decoded.id,
-            email : decoded.name
+            role : decoded.role
         }
         next()
     }
