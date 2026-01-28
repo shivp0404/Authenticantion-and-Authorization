@@ -62,7 +62,23 @@ const AuthControllers = {
    catch(err){
     next(err)
    }
+  },
+forgotPassword: async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const result = await AuthServices.forgotPassword(email);
+
+    res.status(200).json({
+      success: true,
+      message: "Reset password link sent successfully",
+      data:result
+    });
+  } catch (err) {
+    next(err);
   }
+},
+
 };
 
 module.exports = AuthControllers;
