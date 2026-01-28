@@ -14,6 +14,9 @@ return UserModel.create(data);
         user.refreshToken = refreshtoken;
         return user.save()
     },
+    findbyid:(id)=>{
+        return UserModel.findById(id)
+    },
 
     findRefreshtoken:async(id)=>{
         const user = await UserModel.findById(id).select('refreshToken')
