@@ -8,8 +8,9 @@ const {
 const {
   GenerateAccessToken,
   GenerateRefreshToken,
-  decodeRefreshToken,
+  decodeRefreshToken, GenerateResetPasswordToken,
 } = require("../../utils/jwt");
+
 
 const AuthServices = {
   registration: async (payload) => {
@@ -137,6 +138,39 @@ const AuthServices = {
       AccessToken:NewAccessToken,
       RefreshToken:hashNewRefreshToken 
     }
+  },
+forgotPassword: async (email) => {
+    if (!email) throw new Error("Email didn't receive");
+
+    const user = await UserRepositories.findbyEmail(email);
+    if (!user) throw new Error("User not found");
+
+   
+    const resetToken = await GenerateResetPasswordToken({
+      id: user._id,
+    });
+
+    if (!resetToken) throw new Error("Reset token not generated");
+
+  
+    const hashedResetToken = await hashRefreshToken(resetToken);
+
+    if (!hashedResetToken)
+      throw new Error("Reset password token not hashed");
+
+ 
+    const expires = new Date(Date.now() + 10 * 60 * 1000);
+
+   
+    await UserRepositories.saveResetPasswordToken(user, {
+      resetPasswordToken: hashedResetToken,
+      resetPasswordExpiresAt: expires,
+    });
+ const resetLink = `CLIENTAPI/reset-password?token=${resetToken}`;
+    return {
+      resetToken,
+      resetLink
+    };
   },
 };
 
