@@ -1,10 +1,12 @@
-const user = require('../auth/user.schema')
+const user = require("../auth/user.schema");
 
 const UserRepositories = {
-  findbyId:async(id)=>{
-    
-    return user.findById(id).select("-password -refreshToken")
-  }
-}
+  findbyId: async (id) => {
+    return user.findById(id).select("-password -refreshToken");
+  },
+  alluser: async () => {
+    return await user.findById(id).select("-password -refreshToken");
+  },
+};
 
-module.exports = UserRepositories
+module.exports = UserRepositories;
