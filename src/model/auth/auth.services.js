@@ -41,17 +41,18 @@ const AuthServices = {
     if (!isMatched) {
       throw new Error("Password is wrong");
     }
+  
 
     const accessToken = GenerateAccessToken({
       id: user._id,
-      name: user.name,
+      role: user.role,
     });
 
     if(!accessToken) throw new Error("Access token is not generated")
 
     const refreshToken = GenerateRefreshToken({
       id: user._id,
-      name: user.name,
+      role: user.role,
     });
 
     if(!refreshToken) throw new Error("Refresh token is not generated")
