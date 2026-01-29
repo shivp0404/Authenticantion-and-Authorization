@@ -211,7 +211,7 @@ Comprehensive test coverage including:
 
 ```bash
 # Run all tests
-npm test
+npm run test
 
 ```
 
@@ -252,4 +252,4 @@ Backend Developer
 
 ## License
 
-This project is for learning and demonstration purposes.
+This project is licensed under the MIT License.
