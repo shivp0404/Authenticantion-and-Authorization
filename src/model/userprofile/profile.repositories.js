@@ -5,7 +5,7 @@ const UserRepositories = {
     return user.findById(id).select("-password -refreshToken");
   },
   alluser: async () => {
-    return await user.findById(id).select("-password -refreshToken");
+    return await user.find().select("-password -refreshToken");
   },
 };
 
