@@ -22,7 +22,7 @@ const profileServices = {
 
   updatePassword:async(id,data)=>{
   const user = await AuthRepositoreis.findbyid(id);
-  console.log(data)
+
   if(!user) throw new Error("user is not defined")
   const isValid = await bcrypt.comparePassword(data.oldpassword,user.password)
  if(!isValid) throw new Error("Old password doesn't match");
