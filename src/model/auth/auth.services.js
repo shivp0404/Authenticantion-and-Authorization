@@ -8,8 +8,9 @@ const {
 const {
   GenerateAccessToken,
   GenerateRefreshToken,
-  decodeRefreshToken,
+  decodeRefreshToken, GenerateResetPasswordToken,decodeResetPasswordToken
 } = require("../../utils/jwt");
+
 
 const AuthServices = {
   registration: async (payload) => {
@@ -138,6 +139,79 @@ const AuthServices = {
       RefreshToken:hashNewRefreshToken 
     }
   },
+forgotPassword: async (email) => {
+    if (!email) throw new Error("Email didn't receive");
+
+    const user = await UserRepositories.findbyEmail(email);
+    if (!user) throw new Error("User not found");
+
+   
+    const resetToken = await GenerateResetPasswordToken({
+      id: user._id,
+    });
+
+    if (!resetToken) throw new Error("Reset token not generated");
+
+  
+    const hashedResetToken = await hashRefreshToken(resetToken);
+
+    if (!hashedResetToken)
+      throw new Error("Reset password token not hashed");
+
+ 
+    const expires = new Date(Date.now() + 10 * 60 * 1000);
+
+   
+     await UserRepositories.saveResetPasswordToken(user, {
+      resetPasswordToken: hashedResetToken,
+      resetPasswordExpiresAt: expires,
+    });
+
+ const resetLink = `CLIENTAPI/reset-password?token=${resetToken}`;
+
+    return {
+      resetToken,
+      resetLink
+    };
+  },
+
+ resetPassword: async ({ token, newPassword }) => {
+    if (!token) throw new Error("Reset token missing");
+    if (!newPassword) throw new Error("New password missing");
+
+
+    const decode = await decodeResetPasswordToken(token);
+    if (!decode) throw new Error("Invalid reset token");
+
+    const user = await UserRepositories.findbyid(decode.id);
+    if (!user) throw new Error("User not found");
+
+
+    if (user.resetPasswordExpiresAt < new Date())
+      throw new Error("Reset token expired");
+
+  
+    const isValid = await compareRefreshToken(
+      token,
+      user.resetPasswordToken
+    );
+
+    if (!isValid) throw new Error("Reset token not valid");
+
+  
+    const hashedNewPassword = await hashPassword(newPassword);
+if(!hashedNewPassword) throw new Error("New Password didn't hashed")
+ 
+    await UserRepositories.updatePassword(user, hashedNewPassword);
+
+    await UserRepositories.clearResetPasswordToken(user);
+
+    return {
+      message: "Password reset successfully",
+    };
+  },
+
+
 };
 
 module.exports = AuthServices;
