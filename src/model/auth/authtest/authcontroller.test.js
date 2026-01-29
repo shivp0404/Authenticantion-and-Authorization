@@ -145,7 +145,7 @@ describe('Testing the Logout Controller', () => {
       'RefreshToken',
       expect.objectContaining({
         httpOnly: true,
-        secure: false,
+        secure: true,
         sameSite: 'lax'
       })
     )

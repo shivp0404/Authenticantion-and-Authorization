@@ -28,11 +28,12 @@ describe('Integration Test: /profile route', () => {
     testUser = await User.create({
       name: 'Test User',
       email: 'profile@test.com',
-      password: hashedPassword 
+      password: hashedPassword ,
+      role:"user"
     })
 
   
-    accessToken = GenerateAccessToken({ id: testUser._id, name: testUser.name })
+    accessToken = GenerateAccessToken({ id: testUser._id, role: testUser.role })
   })
 
   test('GET /user/profile should return 401 if token missing', async () => {

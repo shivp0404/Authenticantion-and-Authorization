@@ -54,7 +54,7 @@ describe('Auth Middleware Unit Test', () => {
 
     VerifyUser.mockReturnValue({
       id: '123',
-      name: 'TestUser'
+      role: 'user'
     })
 
     authMiddleware(req, res, mockNext)
@@ -62,7 +62,7 @@ describe('Auth Middleware Unit Test', () => {
     expect(VerifyUser).toHaveBeenCalledWith('validtoken')
     expect(req.user).toEqual({
       id: '123',
-      email: 'TestUser'
+      role: 'user'
     })
     expect(mockNext).toHaveBeenCalled()
   })
