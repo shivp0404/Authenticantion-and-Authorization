@@ -25,6 +25,18 @@ const ProfileControllers = {
       next(err);
     }
   },
+  updatePassword: async (req, res, next) => {
+    try {
+      const id = req.user.id
+      const data = req.body
+      const result = await profileServices.updatePassword(id,data);
+      res
+        .status(200)
+        .json({success:true,message:result.message});
+    } catch (err) {
+      next(err);
+    }
+  },
 };
 
 module.exports = ProfileControllers;

@@ -4,7 +4,7 @@ dotenv.config()
 
 
 const GenerateAccessToken= (data)=>{
-   return jwt.sign(data,process.env.AccessTokenSecret,{expiresIn:60})
+   return jwt.sign(data,process.env.AccessTokenSecret,{expiresIn:'30m'}) 
 }
 
 const GenerateRefreshToken= (data)=>{
