@@ -10,6 +10,7 @@ const ConnectDb = (link)=>{
      }
      catch(err){
         console.error("Error connecting database",err);
+        process.exit(1);
      }
 }
 
