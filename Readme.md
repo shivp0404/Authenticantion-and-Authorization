@@ -1,205 +1,255 @@
-# Authentication Service (Node.js)
+# Authentication & Authorization Service
 
-A production-ready authentication system built with **Node.js, Express, MongoDB**, following clean architecture principles and industry-standard security practices.
-
-This project demonstrates **real-world authentication flows** including user registration, login, logout, JWT-based access control, refresh token , secure cookie handling, and comprehensive testing.
+A secure and scalable authentication service built with **Node.js**, **Express**, and **MongoDB**, implementing JWT-based authentication, role-based access control, and production-grade security practices.
 
 ---
 
-## 🚀 Features
+## Overview
 
-* User Registration
-* User Login
-* Secure Logout
-* JWT Access Token generation
-* Refresh Token generation 
-* Hashed refresh token storage (DB-level security)
-* HTTP-only cookie handling
-* Centralized error handling
-* Structured logging middleware
-* Clean separation of layers (Controller / Service / Repository)
-* Full test coverage (Unit + Integration)
+This project demonstrates a complete authentication and authorization system with clean architecture, comprehensive security measures, and real-world implementation patterns. Built with separation of concerns using Controller-Service-Repository pattern, it includes proper error handling, logging, and extensive test coverage.
 
 ---
 
-## 🧱 Tech Stack
+## Core Features
 
-* **Backend:** Node.js, Express.js
-* **Database:** MongoDB (Mongoose)
-* **Authentication:** JWT (Access & Refresh Tokens)
-* **Security:** bcrypt, HTTP-only cookies
-* **Testing:** Jest, Supertest
-* **Environment:** dotenv
+### Authentication System
+- **User Registration** - Secure account creation with input validation
+- **User Login** - Credential verification with JWT token generation
+- **Logout** - Token invalidation and session cleanup
+- **Token Refresh** - Seamless session extension with refresh tokens
+- **Get User Profile** - Retrieve authenticated user information
+- **Get All Users** - Fetch user list (with authorization checks)
 
----
+### Password Management
+- **Update Password** - Authenticated password change
+- **Forgot Password** - Request password reset token
+- **Reset Password** - Token-based password reset with expiry
 
-## 📁 Project Structure
-
-```
-app.js
-server.js
-config/
-├── db.js
-
-src/
-├── middleware/
-│   ├── authmiddleware.js
-│   ├── logger.js
-│   ├── errorHandler.js
-│   └── middlewaretest/
-│       └── authmiddleware.test.js
-│
-├── routes/
-│   ├── authRoutes.js
-│   └── userRoutes.js
-│
-├── utils/
-│   ├── bcrypt.js
-│   └── jwt.js
-│
-├── model/
-│   ├── auth/
-│   │   ├── user.schema.js
-│   │   ├── auth.repositories.js
-│   │   ├── auth.controllers.js
-│   │   ├── auth.services.js
-│   │   └── authtest/
-│   │       ├── authcontrollers.test.js
-│   │       ├── authservice.test.js
-│   │       └── authintegration.test.js
-│   │
-│   └── userprofile/
-│       ├── profile.controllers.js
-│       ├── profile.services.js
-│       ├── profile.repositories.js
-│       └── test/
-│           ├── unittest/
-│           │   ├── profile.controllers.test.js
-│           │   └── profile.services.test.js
-│           └── integrationtest/
-│               └── profile.integration.test.js
-```
-
-
-
-
-## 🔐 Authentication Flow
-
-### 1️⃣ Register
-
-- Validates user input
-- Hashes password using bcrypt
-- Stores user in database
-
-### 2️⃣ Login
-
-- Validates credentials
-- Compares hashed password
-- Generates **Access Token** (short-lived)
-- Generates **Refresh Token** (long-lived)
-- Hashes refresh token before saving to DB
-- Sends refresh token via HTTP-only cookie
-
-### 3️⃣ Logout
-
-- Reads refresh token from cookies
-- Decodes and validates refresh token
-- Verifies token against hashed DB value
-- Removes refresh token from database
-- Clears refresh token cookie
-
-### 4️⃣ Get User Profile 
-
-- Extracts **Access Token** from request headers
-- Verifies and decodes JWT access token
-- Attaches decoded payload 
-- Controller reads decode payload
-- Service validates business rules
-- Repository fetches user profile by ID
-- Returns authenticated user profile
+### Security & Middleware
+- **Authentication Middleware** - JWT token verification
+- **Authorization Middleware** - Role-based access control
+- **Logger Middleware** - HTTP request/response logging
+- **Centralized Error Handling** - Consistent error responses
 
 ---
 
-## 🧪 Testing Strategy
+## Tech Stack
 
-### Unit Tests
-
-- Service layer logic (auth services)
-- Controller behavior (request → response)
-- All external dependencies mocked
-
-### Integration Tests
-
-- Real API requests using Supertest
-- Real database connection (test DB)
-- Covers:
-  - Register flow
-  - Login flow
-  - Logout flow
-  - Cookie handling
+**Backend:** Node.js, Express.js  
+**Database:** MongoDB with Mongoose ODM  
+**Authentication:** JWT (jsonwebtoken)  
+**Security:** bcrypt for password hashing  
+**Testing:** Jest, Supertest  
+**Environment:** dotenv  
 
 ---
 
-## 🧪 Run Tests
+## Installation
 
 ```bash
+# Clone repository
+git clone https://github.com/shivp0404/Authenticantion-and-Authorization.git
+
+
+# Install dependencies
+npm install
+
+# Create .env file with required variables
+PORT=3000
+DB_Link = ""
+DB_Test_Link =""
+AccessTokenSecret=""
+RefreshTokenSecret=""
+JWT_SECRET=""
+RESET_PASSWORD_SECRET=""
+
+
+# Start server
+npm run dev
+
+# Run tests
+npm run test
+```
+
+---
+
+## API Endpoints
+
+### Authentication Routes
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/auth/register` | Register new user | No |
+| POST | `/auth/login` | Login user | No |
+| POST | `/auth/logout` | Logout user | Yes |
+| POST | `/auth/refresh` | Refresh access token | Yes (Cookie) |
+
+### Password Management Routes
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/auth/forgotPassword` | Request password reset | No |
+| POST | `/auth/reset-Password/:token` | Reset password with token | No |
+| PUT | `/auth/updatePassword` | Update password | Yes |
+
+### User Routes
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/user/profile` | Get logged-in user profile | Yes |
+| GET | `/user/alluser` | Get all users | Yes (Admin) |
+
+---
+
+## Architecture
+
+### Layered Architecture Pattern
+
+```
+Routes (API Layer)
+    ↓
+Controllers (Request Handling)
+    ↓
+Services (Business Logic)
+    ↓
+Repositories (Data Access)
+    ↓
+Database (MongoDB)
+```
+
+**Benefits:**
+- Clear separation of concerns
+- Easy to test and maintain
+- Scalable and modular
+- Each layer has single responsibility
+
+---
+
+## Security Implementation
+
+### Password Security
+- Passwords hashed with **bcrypt** (10 salt rounds)
+- Never stored in plain text
+- Password validation before hashing
+
+### Token Management
+- **Access Tokens**: Short-lived (50m minutes), used for API requests
+- **Refresh Tokens**: Long-lived (1hr), stored as HTTP-only cookies
+- Refresh tokens hashed before database storage
+- Token invalidation on logout
+
+### Middleware Protection
+- JWT verification on protected routes
+- Role-based access control for admin routes
+- Request validation and sanitization
+
+### Additional Security
+- HTTP-only cookies prevent XSS attacks
+- Secure cookie configuration for production
+- Environment variables for sensitive data
+- Centralized error handling (no info leakage)
+
+---
+
+## Middleware Implementation
+
+### 1. Authentication Middleware
+Verifies JWT access token from request headers and attaches user info to request object.
+
+### 2. Authorization Middleware
+Checks user roles/permissions for protected resources.
+
+### 3. Logger Middleware
+Logs all HTTP requests with timestamp, method, URL, and response time.
+
+### 4. Error Handler Middleware
+Catches all errors, formats consistent responses, and prevents stack trace exposure.
+
+---
+
+## Project Structure
+
+```
+├── app.js                      # Express app setup
+├── server.js                   # Server entry point
+├── config/
+│   └── db.js                   # Database connection
+└── src/
+    ├── middleware/
+    │   ├── authmiddleware.js
+    │   ├── logger.js
+    │   ├── Authorization.js
+    │   └── errorHandler.js
+    ├── routes/
+    │   ├── authRoutes.js
+    │   └── userRoutes.js
+    ├── utils/
+    │   ├── bcrypt.js
+    │   └── jwt.js
+    └── model/
+        ├── auth/
+        │   ├── user.schema.js
+        │   ├── user.repositories.js
+        │   ├── auth.services.js
+        │   ├── auth.controllers.js
+        │   └── authtest/
+        └── userprofile/
+            ├── profile.controllers.js
+            ├── profile.services.js
+            └── profile.repositories.js
+```
+
+---
+
+## Testing
+
+Comprehensive test coverage including:
+
+- **Unit Tests**: Service and controller logic testing
+- **Integration Tests**: Complete API flow testing with real database
+- **Middleware Tests**: Authentication and error handling verification
+
+```bash
+# Run all tests
 npm test
-````
-
----
-
-## ⚙️ Environment Variables
-
-Create a `.env` file:
 
 ```
-PORT=5000
-DB_LINK=your_db_url
-DB_Test_Link=your_test_db_url
-ACCESS_TOKEN_SECRET=your_secret
-REFRESH_TOKEN_SECRET=your_secret
+
+---
+
+## Key Learnings & Implementation
+
+✅ **Clean Architecture** - Proper separation of concerns across layers  
+✅ **Security Best Practices** - Bcrypt hashing, JWT tokens, HTTP-only cookies  
+✅ **Error Handling** - Centralized error management with custom error classes  
+✅ **Middleware Pattern** - Reusable authentication, authorization, and logging  
+✅ **Testing** - Unit and integration tests for reliability  
+✅ **Repository Pattern** - Database abstraction for maintainability  
+
+---
+
+## Environment Variables
+
+```env
+PORT=3000
+DB_Link = ""
+DB_Test_Link =""
+AccessTokenSecret=""
+RefreshTokenSecret="
+JWT_SECRET=""
+RESET_PASSWORD_SECRET="your_reset_secret_ke"
+
 ```
 
 ---
 
-## ✅ API Endpoints
+## Author
 
-| Method | Endpoint       | Description   |
-| ------ | -------------- | ------------- |
-| POST   | /auth/register | Register user |
-| POST   | /auth/login    | Login user    |
-| POST   | /auth/logout   | Logout user   |
-| GET    | /user/profile  | authenticate user profile |
-
----
-
-## 🧠 Design Decisions
-
-* Refresh tokens are **never stored in plain text**
-* Controllers are kept thin (no business logic)
-* Services handle all decision-making
-* Repository layer handles only DB operations
-* Token validation is always server-side
-
----
-
-## 📌 Future Improvements
-
-* Token rotation on refresh endpoint
-* Role-based authorization
-* Rate limiting on auth routes
-* Refresh token expiry cleanup job
-
----
-
-## 👨‍💻 Author
-
-**Shivansh Patel**
-
+**Shivansh Patel**  
 Backend Developer
 
 ---
 
-## 📄 License
+## License
 
 This project is for learning and demonstration purposes.
