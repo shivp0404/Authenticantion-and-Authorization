@@ -2,7 +2,10 @@ const mongoose = require('mongoose')
 
 const ConnectDb = (link)=>{
      try{
-        mongoose.connect(link)
+        mongoose.connect(link, {
+  tls: true,
+//   tlsAllowInvalidCertificates: true
+})
         console.log("Database Connected")
      }
      catch(err){
