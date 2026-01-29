@@ -29,7 +29,7 @@ const profileServices = {
  const hashedNewPassword = await bcrypt.hashPassword(data.newpassword)
  if(!hashedNewPassword) throw new Error("New Password not hashed")
   await AuthRepositoreis.updatePassword(user,hashedNewPassword);
-  console.log(user)
+
   return{
     message:"Password updated successfully"
   }
