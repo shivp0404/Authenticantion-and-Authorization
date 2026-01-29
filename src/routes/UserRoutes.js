@@ -7,4 +7,5 @@ router.use(authMiddleware)
 
 router.get('/profile',authorization(["user","admin"]),userController.getprofile)
 router.get('/alluser',authorization(["admin"]),userController.getalluser)
+router.post('/updatePassword',userController.updatePassword)
 module.exports = router;
