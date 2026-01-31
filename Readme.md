@@ -15,7 +15,7 @@ https://authenticantion-and-authorization.onrender.com
 
 ## API Documentation (Swagger)
 
-https://authenticantion-and-authorization.onrender.com/api-docs
+https://authenticantion-and-authorization.onrender.com
 
 ---
 ## Core Features
