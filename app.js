@@ -12,12 +12,11 @@ const swaggerSpec = require('./src/swagger')
 
 app.use(
   cors({
-    origin: true,
+    origin:  process.env.FRONTEND_URL,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   })
 );
-console.log("ENV CHECK:", process.env.Frontend_URL);
 
 
 app.use(express.json())
