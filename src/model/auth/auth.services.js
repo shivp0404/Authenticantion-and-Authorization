@@ -83,7 +83,10 @@ const AuthServices = {
   },
 
   logout: async (refreshToken) => {
+    console.log(refreshToken)
+    if(refreshToken) throw new Error("RefreshToken not found")
     const decoded = decodeRefreshToken(refreshToken);
+
 
     const dbtoken = await UserRepositories.findRefreshtoken(decoded.id);
     if (!dbtoken) throw new Error("dbtoken not found");
