@@ -35,7 +35,7 @@ const AuthControllers = {
       const token = req.cookies.RefreshToken;
 
       const user = await AuthServices.logout(token);
-
+    
       res.clearCookie("RefreshToken", {
         httpOnly: true,
         secure: true,
@@ -83,7 +83,7 @@ const AuthControllers = {
   resetPassword: async (req, res, next) => {
     try {
       const token = req.params.token
-      const  newPassword  = req.body.newpassword;
+      const  newPassword  = req.body.password;
       
 
       const result = await AuthServices.resetPassword({
