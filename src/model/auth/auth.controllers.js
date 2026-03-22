@@ -19,7 +19,7 @@ const AuthControllers = {
       res.cookie("RefreshToken", user.refreshToken, {
         httpOnly: true,
         secure: true,
-        sameSite: "lax",
+        sameSite: "none",
       });
       res.status(200).json({
         success: true,
@@ -39,7 +39,7 @@ const AuthControllers = {
       res.clearCookie("RefreshToken", {
         httpOnly: true,
         secure: true,
-        sameSite: "lax",
+        sameSite: "none",
       });
       res.status(200).json({ success: true, message: user.message });
     } catch (err) {
@@ -51,7 +51,7 @@ const AuthControllers = {
       const result = await AuthServices.refresh(req.cookies.RefreshToken);
       res.cookie("RefreshToken", result.RefreshToken, {
         httpOnly: true,
-        sameSite: "lax",
+        sameSite: "none",
         secure: true,
       });
       res
