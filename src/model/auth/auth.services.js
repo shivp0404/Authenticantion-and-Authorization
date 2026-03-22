@@ -83,8 +83,8 @@ const AuthServices = {
   },
 
   logout: async (refreshToken) => {
-    console.log(refreshToken)
-    if(refreshToken) throw new Error("RefreshToken not found")
+  
+    if(!refreshToken) throw new Error("RefreshToken not found")
     const decoded = decodeRefreshToken(refreshToken);
 
 
