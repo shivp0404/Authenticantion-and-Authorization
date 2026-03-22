@@ -167,7 +167,7 @@ forgotPassword: async (email) => {
       resetPasswordExpiresAt: expires,
     });
 
- const resetLink = `CLIENTAPI/reset-password?token=${resetToken}`;
+ const resetLink = `http://localhost:5173/reset-Password/${resetToken}`;
 
     return {
       resetToken,
