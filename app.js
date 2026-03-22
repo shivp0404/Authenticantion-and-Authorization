@@ -9,14 +9,18 @@ const logger = require('./src/middleware/logger')
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./src/swagger')
 
-app.use(express.json())
+
 app.use(
   cors({
-    origin: process.env.Frontend_URL,
+    origin: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
   })
 );
+console.log("ENV CHECK:", process.env.Frontend_URL);
+
+
+app.use(express.json())
 app.use(cookieParser())
 app.use(logger)
 
