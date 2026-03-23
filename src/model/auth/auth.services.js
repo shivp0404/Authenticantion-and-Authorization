@@ -170,7 +170,7 @@ forgotPassword: async (email) => {
       resetPasswordExpiresAt: expires,
     });
 
- const resetLink = `http://localhost:5173/reset-Password/${resetToken}`;
+ const resetLink = `${process.env.Frontend_URL}/reset-Password/${resetToken}`;
 
     return {
       resetToken,
