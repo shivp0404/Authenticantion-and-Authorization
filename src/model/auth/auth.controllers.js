@@ -20,13 +20,13 @@ const AuthControllers = {
 
       res.cookie("RefreshToken", user.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
       });
       res.cookie("AccessToken", user.accessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
       });
       res.status(200).json({
         success: true,
@@ -45,13 +45,13 @@ const AuthControllers = {
     
       res.clearCookie("RefreshToken", {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
       });
         res.clearCookie("AccessToken",{
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: true,
+        sameSite: "none",
       });
       res.status(200).json({ success: true, message: user.message });
     } catch (err) {
