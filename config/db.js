@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const ConnectDb = (link)=>{
      try{
         mongoose.connect(link, {
-//   tls: true,
+  tls: true,
 //   tlsAllowInvalidCertificates: true
 })
         console.log("Database Connected")
