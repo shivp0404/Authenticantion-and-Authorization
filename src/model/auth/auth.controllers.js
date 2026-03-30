@@ -13,10 +13,17 @@ const AuthControllers = {
 
   login: async (req, res, next) => {
     try {
+      const ip  = req.ip
+      const device = req.headers["user-agent"];
       const data = req.body;
-      const user = await AuthServices.login(data);
+      const user = await AuthServices.login(data,ip,device);
 
       res.cookie("RefreshToken", user.refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
+      res.cookie("AccessToken", user.accessToken, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
@@ -41,6 +48,11 @@ const AuthControllers = {
         secure: true,
         sameSite: "none",
       });
+        res.clearCookie("AccessToken",{
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
       res.status(200).json({ success: true, message: user.message });
     } catch (err) {
       next(err);
@@ -54,11 +66,16 @@ const AuthControllers = {
         sameSite: "none",
         secure: true,
       });
+        res.cookie("AccessToken", result.AccessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+      });
       res
         .status(200)
         .json({
           success: true,
-          message: "Refresh the token",
+          message: "Refresh the token" || result.message,
           data: result.AccessToken,
         });
     } catch (err) {

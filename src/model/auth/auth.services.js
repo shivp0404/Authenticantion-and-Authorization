@@ -8,9 +8,11 @@ const {
 const {
   GenerateAccessToken,
   GenerateRefreshToken,
-  decodeRefreshToken, GenerateResetPasswordToken,decodeResetPasswordToken
+  decodeRefreshToken,
+  GenerateResetPasswordToken,
+  decodeResetPasswordToken,
 } = require("../../utils/jwt");
-
+const SessionRepositories = require("./session.repositories");
 
 const AuthServices = {
   registration: async (payload) => {
@@ -32,7 +34,7 @@ const AuthServices = {
     return user;
   },
 
-  login: async (payload) => {
+  login: async (payload, sessionip, userdevice) => {
     if (!payload.email) {
       throw new Error("Email is required");
     }
@@ -51,8 +53,18 @@ const AuthServices = {
       throw new Error("Password is wrong");
     }
 
+    const SessionData = {
+      user_id: user._id,
+      expiry_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      device: userdevice,
+      ip: sessionip,
+    };
+
+    const session = await SessionRepositories.SessionCreate(SessionData);
+
     const accessToken = GenerateAccessToken({
       id: user._id,
+      session_id: session._id,
       role: user.role,
     });
 
@@ -60,6 +72,7 @@ const AuthServices = {
 
     const refreshToken = GenerateRefreshToken({
       id: user._id,
+      session_id: session._id,
       role: user.role,
     });
 
@@ -67,8 +80,8 @@ const AuthServices = {
 
     const hashedRefreshToken = await hashRefreshToken(refreshToken);
 
-    const usernew = await UserRepositories.saveRefreshToken(
-      user,
+    const sessiondata = await SessionRepositories.UpdateTokenSession(
+      session._id,
       hashedRefreshToken,
     );
 
@@ -83,18 +96,19 @@ const AuthServices = {
   },
 
   logout: async (refreshToken) => {
-  
-    if(!refreshToken) throw new Error("RefreshToken not found")
+    if (!refreshToken) throw new Error("RefreshToken not found");
     const decoded = decodeRefreshToken(refreshToken);
 
-
-    const dbtoken = await UserRepositories.findRefreshtoken(decoded.id);
+    const dbtoken = await SessionRepositories.getSession(decoded.session_id);
     if (!dbtoken) throw new Error("dbtoken not found");
 
-    const isValid = compareRefreshToken(refreshToken, dbtoken.refreshToken);
+    const isValid = await compareRefreshToken(
+      refreshToken,
+      dbtoken.refresh_token,
+    );
     if (!isValid) throw new Error("invalid Refresh Token");
 
-    const user = await UserRepositories.removeRefreshToken(decoded.id);
+    await SessionRepositories.revokeSession(decoded.session_id);
 
     return {
       message: "logout",
@@ -105,83 +119,87 @@ const AuthServices = {
 
     const decode = await decodeRefreshToken(refreshToken);
     if (!decode) throw new Error("Token didn't decode");
-  
 
-     const user = await UserRepositories.findbyid(decode.id)
-    if (!user) throw new Error("User didn't found");
-  
+    const session = await SessionRepositories.getSession(decode.session_id);
+    if (!session) throw new Error("Session not found");
 
-    const isValid = await compareRefreshToken(refreshToken,user.refreshToken);
-    if (!isValid) throw new Error("Token is not Valid");
+    if (session.is_revoked) throw new Error("Session revoked");
 
+    if (session.expiry_at.getTime() < Date.now()) {
+      throw new Error("Session expired");
+    }
+
+    const isValid = await compareRefreshToken(
+      refreshToken,
+      session.refresh_token,
+    );
+   if (!isValid) {
+  await SessionRepositories.revokeSession(session._id);
+  throw new Error("Possible token reuse detected");
+} 
 
     const NewAccessToken = await GenerateAccessToken({
       id: decode.id,
+      session_id: decode.session_id,
       role: decode.role,
     });
 
-  
     if (!NewAccessToken) throw new Error("New Access Token is not generated");
 
-    const NewRefreshToken =  await GenerateRefreshToken({
+    const NewRefreshToken = await GenerateRefreshToken({
       id: decode.id,
+      session_id: decode.session_id,
       role: decode.role,
     });
-    
-    if(!NewRefreshToken) throw new Error("New Refresh Token is not generated");
 
-    const hashNewRefreshToken = await hashRefreshToken(NewRefreshToken)
-    if(!hashNewRefreshToken) throw new Error("New Refresh Token is not hashed")
+    if (!NewRefreshToken) throw new Error("New Refresh Token is not generated");
 
-   
-    await UserRepositories.saveRefreshToken(user,hashNewRefreshToken)
-    
-     
-    return{
-      AccessToken:NewAccessToken,
-      RefreshToken:hashNewRefreshToken 
-    }
+    const hashNewRefreshToken = await hashRefreshToken(NewRefreshToken);
+    if (!hashNewRefreshToken)
+      throw new Error("New Refresh Token is not hashed");
+
+    await SessionRepositories.UpdateTokenSession(decode.session_id, hashNewRefreshToken);
+
+    return {
+      AccessToken: NewAccessToken,
+      RefreshToken: NewRefreshToken,
+    };
   },
-forgotPassword: async (email) => {
+
+  forgotPassword: async (email) => {
     if (!email) throw new Error("Email didn't receive");
 
     const user = await UserRepositories.findbyEmail(email);
     if (!user) throw new Error("User not found");
 
-   
     const resetToken = await GenerateResetPasswordToken({
       id: user._id,
     });
 
     if (!resetToken) throw new Error("Reset token not generated");
 
-  
     const hashedResetToken = await hashRefreshToken(resetToken);
 
-    if (!hashedResetToken)
-      throw new Error("Reset password token not hashed");
+    if (!hashedResetToken) throw new Error("Reset password token not hashed");
 
- 
     const expires = new Date(Date.now() + 10 * 60 * 1000);
 
-   
-     await UserRepositories.saveResetPasswordToken(user, {
+    await UserRepositories.saveResetPasswordToken(user, {
       resetPasswordToken: hashedResetToken,
       resetPasswordExpiresAt: expires,
     });
 
- const resetLink = `${process.env.FRONTEND_URL}/reset-Password/${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-Password/${resetToken}`;
 
     return {
       resetToken,
-      resetLink
+      resetLink,
     };
   },
 
- resetPassword: async ({ token, newPassword }) => {
+  resetPassword: async ({ token, newPassword }) => {
     if (!token) throw new Error("Reset token missing");
     if (!newPassword) throw new Error("New password missing");
-
 
     const decode = await decodeResetPasswordToken(token);
     if (!decode) throw new Error("Invalid reset token");
@@ -189,32 +207,25 @@ forgotPassword: async (email) => {
     const user = await UserRepositories.findbyid(decode.id);
     if (!user) throw new Error("User not found");
 
-
     if (user.resetPasswordExpiresAt < new Date())
       throw new Error("Reset token expired");
 
-  
-    const isValid = await compareRefreshToken(
-      token,
-      user.resetPasswordToken
-    );
+    const isValid = await compareRefreshToken(token, user.resetPasswordToken);
 
     if (!isValid) throw new Error("Reset token not valid");
 
-  
     const hashedNewPassword = await hashPassword(newPassword);
-if(!hashedNewPassword) throw new Error("New Password didn't hashed")
- 
+    if (!hashedNewPassword) throw new Error("New Password didn't hashed");
+
     await UserRepositories.updatePassword(user, hashedNewPassword);
 
-    await UserRepositories.clearResetPasswordToken(user);
+    const result =  await UserRepositories.clearResetPasswordToken(user);
+  
 
     return {
       message: "Password reset successfully",
     };
   },
-
-
 };
 
 module.exports = AuthServices;

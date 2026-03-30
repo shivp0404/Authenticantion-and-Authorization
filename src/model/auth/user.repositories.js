@@ -12,11 +12,6 @@ return await UserModel.create(data);
 user.password = newpassword
      return await user.save()
     },
-    
-    saveRefreshToken: async (user,refreshtoken)=>{
-        user.refreshToken = refreshtoken;
-        return await user.save()
-    },
     saveResetPasswordToken:async (user,data)=>{
         user.resetPasswordToken = data.resetPasswordToken;
         user.resetPasswordExpiresAt = data.resetPasswordExpiresAt
@@ -26,16 +21,7 @@ user.password = newpassword
         return await UserModel.findById(id)
     },
 
-    findRefreshtoken:async(id)=>{
-        const user = await UserModel.findById(id).select('refreshToken')
-        return user
-    },
-
-    removeRefreshToken:async(id)=>{
-        const user = await UserModel.findByIdAndUpdate(id)
-        user.refreshToken = "";
-        return user.save();
-    },
+ 
     clearResetPasswordToken:async(user)=>{
         user.resetPasswordToken = null;
         user.resetPasswordExpiresAt = null

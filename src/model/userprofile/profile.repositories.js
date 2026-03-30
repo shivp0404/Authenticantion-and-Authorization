@@ -2,10 +2,10 @@ const user = require("../auth/user.schema");
 
 const UserRepositories = {
   findbyId: async (id) => {
-    return user.findById(id).select("-password -refreshToken");
+    return user.findById(id).select("-password");
   },
   alluser: async () => {
-    return await user.find().select("-password -refreshToken");
+    return await user.find().select("-password");
   },
 };
 
