@@ -13,6 +13,7 @@ const {
   decodeResetPasswordToken,
 } = require("../../utils/jwt");
 const SessionRepositories = require("./session.repositories");
+const redis = require("../../utils/redisClient");
 
 const AuthServices = {
   registration: async (payload) => {
@@ -35,23 +36,50 @@ const AuthServices = {
   },
 
   login: async (payload, sessionip, userdevice) => {
-    if (!payload.email) {
-      throw new Error("Email is required");
+    const MAX_ATTEMPTS = 5;
+    const LOCK_TIME = 10 * 60;
+    
+    if (!payload.email) throw new Error("Email is required");
+    if (!payload.password) throw new Error("Password is required");
+
+    const email = payload.email;
+
+    const isLocked = await redis.get(`login_lock:${email}`);
+    if (isLocked) {
+       ttl = await redis.ttl(`login_lock:${email}`);
+      throw new Error(`Account locked. Try again after ${ttl} seconds`);
     }
-    if (!payload.password) {
-      throw new Error("Password is required");
-    }
-    const user = await UserRepositories.findbyEmail(payload.email);
+
+    const user = await UserRepositories.findbyEmail(email);
 
     if (!user) {
-      throw new Error("Email is wrong");
+      throw new Error("Invalid credentials");
     }
 
     const isMatched = await comparePassword(payload.password, user.password);
 
     if (!isMatched) {
-      throw new Error("Password is wrong");
+      const attempts = await redis.incr(`login_attempts:${email}`);
+
+      if (attempts === 1) {
+        await redis.expire(`login_attempts:${email}`, LOCK_TIME);
+      }
+
+      if (attempts >= MAX_ATTEMPTS) {
+          ttl = await redis.ttl(`login_lock:${email}`);
+        await redis.set(`login_lock:${email}`, "locked", "EX", LOCK_TIME);
+        await redis.del(`login_attempts:${email}`);
+        throw new Error({
+          status: 429,
+          message: "Account locked",
+          data: ttl,
+        });
+      }
+
+      throw new Error(`Password is wrong. Attempts: ${attempts}`);
     }
+
+    await redis.del(`login_attempts:${email}`);
 
     const SessionData = {
       user_id: user._id,
@@ -80,7 +108,7 @@ const AuthServices = {
 
     const hashedRefreshToken = await hashRefreshToken(refreshToken);
 
-    const sessiondata = await SessionRepositories.UpdateTokenSession(
+    await SessionRepositories.UpdateTokenSession(
       session._id,
       hashedRefreshToken,
     );
@@ -114,6 +142,7 @@ const AuthServices = {
       message: "logout",
     };
   },
+
   refresh: async (refreshToken) => {
     if (!refreshToken) throw new Error("RefreshToken didn't receive");
 
@@ -133,10 +162,10 @@ const AuthServices = {
       refreshToken,
       session.refresh_token,
     );
-   if (!isValid) {
-  await SessionRepositories.revokeSession(session._id);
-  throw new Error("Possible token reuse detected");
-} 
+    if (!isValid) {
+      await SessionRepositories.revokeSession(session._id);
+      throw new Error("Possible token reuse detected");
+    }
 
     const NewAccessToken = await GenerateAccessToken({
       id: decode.id,
@@ -158,7 +187,10 @@ const AuthServices = {
     if (!hashNewRefreshToken)
       throw new Error("New Refresh Token is not hashed");
 
-    await SessionRepositories.UpdateTokenSession(decode.session_id, hashNewRefreshToken);
+    await SessionRepositories.UpdateTokenSession(
+      decode.session_id,
+      hashNewRefreshToken,
+    );
 
     return {
       AccessToken: NewAccessToken,
@@ -219,8 +251,7 @@ const AuthServices = {
 
     await UserRepositories.updatePassword(user, hashedNewPassword);
 
-    const result =  await UserRepositories.clearResetPasswordToken(user);
-  
+    const result = await UserRepositories.clearResetPasswordToken(user);
 
     return {
       message: "Password reset successfully",

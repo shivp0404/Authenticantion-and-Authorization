@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const AuthControllers = require('../model/auth/auth.controllers')
-
+const rateLimiter = require('../middleware/rateLimiter')
 /**
  * @swagger
  * tags:
@@ -50,7 +50,7 @@ router.post('/register',AuthControllers.register)
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login',AuthControllers.login)
+router.post('/login',rateLimiter,AuthControllers.login)
 /**
  * @swagger
  * /auth/logout:

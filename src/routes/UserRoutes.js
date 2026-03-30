@@ -2,7 +2,9 @@ const express = require('express')
 const router = express.Router()
 const userController = require('../model/userprofile/profile.controllers')
 const authMiddleware = require('../middleware/authmiddleware')
+const RateLimit = require("../middleware/rateLimiter")
 const authorization = require('../middleware/authorization')
+router.use(RateLimit)
 router.use(authMiddleware)
 
 
