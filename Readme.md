@@ -9,13 +9,12 @@ A secure and scalable authentication service built with **Node.js**, **Express**
 This project demonstrates a complete authentication and authorization system with clean architecture, comprehensive security measures, and real-world implementation patterns. Built with separation of concerns using Controller-Service-Repository pattern, it includes proper error handling, logging, and extensive test coverage.
 
 ---
-## Live Backend
-
-https://authenticantion-and-authorization.onrender.com
+## Live app
+https://auth-frontend-two-beta.vercel.app/
 
 ## API Documentation (Swagger)
 
-https://authenticantion-and-authorization.onrender.com
+https://authenticantion-and-authorization.onrender.com/docs
 
 ---
 ## Core Features
