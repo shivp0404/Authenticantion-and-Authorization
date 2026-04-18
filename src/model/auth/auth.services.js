@@ -222,7 +222,7 @@ const AuthServices = {
       resetPasswordExpiresAt: expires,
     });
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-Password/${resetToken}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     const html = `
   <div style="font-family: Arial, sans-serif; line-height: 1.6;">
