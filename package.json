@@ -21,6 +21,7 @@
     "jest": "^30.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.20.4",
+    "nodemailer": "^8.0.5",
     "nodemon": "^3.1.11",
     "supertest": "^7.1.4",
     "swagger-jsdoc": "^6.2.8",
