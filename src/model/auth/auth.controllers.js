@@ -93,8 +93,8 @@ const AuthControllers = {
 
       res.status(200).json({
         success: true,
-        message: "Reset password link sent successfully",
-        data: result,
+        message: result,
+
       });
     } catch (err) {
       next(err);

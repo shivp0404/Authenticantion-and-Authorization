@@ -14,6 +14,7 @@ const {
 } = require("../../utils/jwt");
 const SessionRepositories = require("./session.repositories");
 const redis = require("../../utils/redisClient");
+const sendEmail = require("../../utils/mail");
 
 const AuthServices = {
   registration: async (payload) => {
@@ -38,7 +39,7 @@ const AuthServices = {
   login: async (payload, sessionip, userdevice) => {
     const MAX_ATTEMPTS = 5;
     const LOCK_TIME = 10 * 60;
-    
+
     if (!payload.email) throw new Error("Email is required");
     if (!payload.password) throw new Error("Password is required");
 
@@ -46,7 +47,7 @@ const AuthServices = {
 
     const isLocked = await redis.get(`login_lock:${email}`);
     if (isLocked) {
-       ttl = await redis.ttl(`login_lock:${email}`);
+      ttl = await redis.ttl(`login_lock:${email}`);
       throw new Error(`Account locked. Try again after ${ttl} seconds`);
     }
 
@@ -66,7 +67,7 @@ const AuthServices = {
       }
 
       if (attempts >= MAX_ATTEMPTS) {
-          ttl = await redis.ttl(`login_lock:${email}`);
+        ttl = await redis.ttl(`login_lock:${email}`);
         await redis.set(`login_lock:${email}`, "locked", "EX", LOCK_TIME);
         await redis.del(`login_attempts:${email}`);
         throw new Error({
@@ -223,10 +224,23 @@ const AuthServices = {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-Password/${resetToken}`;
 
-    return {
-      resetToken,
-      resetLink,
-    };
+    const html = `
+  <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+    <h2>Password Reset Request</h2>
+    <p>You requested to reset your password.</p>
+    <p>Click the link below to reset it:</p>
+    <a href="${resetLink}" 
+       style="display:inline-block;padding:10px 15px;background:#007bff;color:#fff;text-decoration:none;border-radius:5px;">
+       Reset Password
+    </a>
+    <p>This link will expire in 10 minutes.</p>
+    <p>If you did not request this, please ignore this email.</p>
+  </div>
+`;
+
+    await sendEmail(email, "Reset Password", html);
+
+    return "Reset password link sent successfully"
   },
 
   resetPassword: async ({ token, newPassword }) => {
