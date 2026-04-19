@@ -37,7 +37,7 @@ const AuthServices = {
   },
 
   login: async (payload, sessionip, userdevice) => {
-    const MAX_ATTEMPTS = 5;
+    const MAX_ATTEMPTS = 8;
     const LOCK_TIME = 10 * 60;
 
     if (!payload.email) throw new Error("Email is required");
