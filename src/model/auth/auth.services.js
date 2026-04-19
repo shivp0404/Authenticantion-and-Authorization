@@ -47,7 +47,7 @@ const AuthServices = {
 
     const isLocked = await redis.get(`login_lock:${email}`);
     if (isLocked) {
-      ttl = await redis.ttl(`login_lock:${email}`);
+     const  ttl = await redis.ttl(`login_lock:${email}`);
       throw new Error(`Account locked. Try again after ${ttl} seconds`);
     }
 
@@ -67,17 +67,13 @@ const AuthServices = {
       }
 
       if (attempts >= MAX_ATTEMPTS) {
-        ttl = await redis.ttl(`login_lock:${email}`);
         await redis.set(`login_lock:${email}`, "locked", "EX", LOCK_TIME);
         await redis.del(`login_attempts:${email}`);
-        throw new Error({
-          status: 429,
-          message: "Account locked",
-          data: ttl,
-        });
+        const  ttl = await redis.ttl(`login_lock:${email}`);
+       throw new Error(`Account locked2. Try again after ${ttl} seconds`);
       }
 
-      throw new Error(`Password is wrong. Attempts: ${attempts}`);
+      throw new Error(`Invalid Credentials ${attempts}`);
     }
 
     await redis.del(`login_attempts:${email}`);
